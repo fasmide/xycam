@@ -1,0 +1,16 @@
+extends layout
+
+block content
+	script.
+		console.log("Lets go");
+		var server = new WebSocket("ws://localhost:3000/clients");
+		
+		server.onmessage = function (e) {
+			document.getElementById('image').src = 'data:image/jpg;base64,'+e.data ;
+		}
+		server.onopen = function() {
+			console.log("Has connection");
+		}
+	h1= title
+	p Welcome to #{title}
+	img#image(src="", width=640, height=480)
