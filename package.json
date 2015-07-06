@@ -11,6 +11,7 @@
   "dependencies": {
     "mjpeg-consumer": "^0.6.2",
     "request": "^2.58.0",
+    "serialport": "^1.7.4",
     "ws": "^0.7.2"
   }
 }

@@ -43,6 +43,13 @@ clientServer.on('connection', function(ws) {
   debug('A client has connected');
 });
 
+var controlServer = new ws.Server({server: server, path: '/control'});
+controlServer.on('connection', function(ws) {
+  debug('Control socket opened');
+  ws.on('message', function(data) {
+    debug('Control received: %s', data);
+  });
+});
 
 server.listen(port);
 server.on('error', onError);
