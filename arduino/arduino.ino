@@ -1,48 +1,77 @@
 #include <AccelStepper.h>
 
-
-AccelStepper stepper(AccelStepper::DRIVER, 2, 5); // Defaults to AccelStepper::FULL4WIRE (4 pins) on 2, 3, 4, 5
-
-AccelStepper stepper2(AccelStepper::DRIVER, 3, 6);
+//(type, step pin, direction pin)
+AccelStepper stepperX(AccelStepper::DRIVER, 2, 5);
+AccelStepper stepperY(AccelStepper::DRIVER, 3, 6);
 
 unsigned long nextUpdate = 0;
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(115200);
+    Serial.setTimeout(10);
+    stepperX.setMaxSpeed(750);
+    stepperX.setAcceleration(100);
+    
+    stepperY.setMaxSpeed(750);
+    stepperY.setAcceleration(100);
+    
 }
 
 void loop()
 {
-    if (stepper.distanceToGo() == 0)
-    {
     
-        stepper.moveTo(rand() % 200);
-        stepper.setMaxSpeed((rand() % 200) + 1);
-        stepper.setAcceleration((rand() % 200) + 1);
-    }
+    stepperX.run();
+    stepperY.run();
+    
+    
+    handleInput();
+    update();
 
-    stepper.run();
-    
-    if (stepper2.distanceToGo() == 0)
-    {
-    
-        stepper2.moveTo(rand() % 200);
-        stepper2.setMaxSpeed((rand() % 200) + 1);
-        stepper2.setAcceleration((rand() % 200) + 1);
-    }
+}
 
-    stepper2.run();
-    
-    //this should be every second to so...
-    //it will overflow at some point...
+
+void update() {
+  
+    //this should be every second or so
+    //it will overflow and stop working at some point :P
     if (millis() >= nextUpdate) {
-        
-        Serial.print("Value is:");
-        Serial.print(stepper.currentPosition());
+      
+        Serial.print(stepperX.currentPosition());
         Serial.print(" ");
-        Serial.print(stepper2.currentPosition());
+        Serial.print(stepperY.currentPosition());
+        Serial.print(" ");
+        Serial.print(stepperX.targetPosition());
+        Serial.print(" ");
+        Serial.print(stepperY.targetPosition());
+        Serial.print(" ");
+        Serial.print(stepperX.distanceToGo());
+        Serial.print(" ");
+        Serial.print(stepperY.distanceToGo());
         Serial.print("\r\n");
-        nextUpdate = millis() + 1000;
+        
+        nextUpdate = millis() + 250;
     }
+}
+void handleInput() {
+      if (Serial.available() > 0) {
+          
+          char command = Serial.read();
+          
+          if (command == 'j') { //j as in jog
+              long jogX = Serial.parseInt();
+              long jogY = Serial.parseInt();
+              //we are jogging
+              stepperX.move(jogX);
+              stepperY.move(jogY);
+          }
+          
+          if (command == 'g') { 
+              long absoluteX = Serial.parseInt();
+              long absoluteY = Serial.parseInt();
+              stepperX.moveTo(absoluteX);
+              stepperY.moveTo(absoluteY);
+          }
+        
+      }
 }
