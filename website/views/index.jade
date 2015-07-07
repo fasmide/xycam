@@ -1,16 +1,97 @@
 extends layout
 
 block content
+	script(src='/js/sweetalert.min.js')
+	link(rel='stylesheet', href='/stylesheets/sweetalert.css')
+	script(src='/js/virtualjoystick.js')
 	script.
+		var joystick = new VirtualJoystick({
+			container	: document.getElementById('joystickcontainer'),
+			mouseSupport: true,
+			limitStickTravel: true,
+			stickRadius: 25
+		});
+
 		console.log("Lets go");
 		var server = new WebSocket("ws://localhost:3000/clients");
 		
 		server.onmessage = function (e) {
-			document.getElementById('image').src = 'data:image/jpg;base64,'+e.data ;
+			var e = JSON.parse(e.data);
+			if(e.type == 'image') {
+				document.getElementById('image').src = 'data:image/jpg;base64,'+e.data;
+			}
+			if(e.type == 'position') {
+				console.log("has position data", e.data);
+				document.getElementById('currentX').innerHTML = e.data.currentX + "x";
+				document.getElementById('currentY').innerHTML = e.data.currentY + "y";
+				document.getElementById('targetX').innerHTML = e.data.targetX + "x";
+				document.getElementById('targetY').innerHTML = e.data.targetY + "y";
+				document.getElementById('distanceX').innerHTML = e.data.distanceX + "x";
+				document.getElementById('distanceY').innerHTML = e.data.distanceY + "y";
+			}
+			
 		}
+		var debounceZeros = 0;
 		server.onopen = function() {
 			console.log("Has connection");
+			setInterval(function() {
+				var x = parseInt(joystick.deltaX(), 10);
+				var y = parseInt(joystick.deltaY(), 10);
+				if(x === 0 && y === 0) {
+					if(debounceZeros > 5) {
+						return;
+					} else {
+						debounceZeros++;
+					}
+						
+				} else {
+					debounceZeros = 0;
+				}
+
+				server.send(JSON.stringify({type: 'jog', data: {x: x, y: y}}));
+			}, 100);		
 		}
+	script.
+		//dont know why im doing this without jquery... :)
+		document.addEventListener("DOMContentLoaded", function(event) { 
+			document.getElementById('gotoInput').onkeyup = function (e) {
+			console.log("muh?");
+				if (e.keyCode == 13) {
+					var elem = e.srcElement || e.target;
+					var i = elem.value.split(" ");
+					var pos = {
+						type: 'absolutePosition',
+						data: {
+							x: parseInt(i[0], 10),
+							y: parseInt(i[1], 10)
+						}
+					};
+					console.log("sending absolute pos:", pos);
+					server.send(JSON.stringify(pos));
+					elem.value = "";
+				}
+			};
+		});
+
 	h1= title
 	p Welcome to #{title}
-	img#image(src="", width=640, height=480)
+	img#image(style='float:left;', src="/img/classic-8mm-camera.jpg", width=640, height=480)
+	div(style='float:left; margin-left: 20px;')
+		input#gotoInput(type='text', placeholder='goto e.g "0 0<enter>"')
+		div#joystickcontainer
+		h2 Position
+		table.position
+			tr
+				td#currentX 0x
+				td#currentY 0y
+		h2 Target
+		table.position
+			tr
+				td#targetX 0x
+				td#targetY 0y
+		h2 Distance
+		table.position
+			tr
+				td#distanceX 0x
+				td#distanceY 0y
+		

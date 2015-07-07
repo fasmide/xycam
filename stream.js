@@ -51,6 +51,17 @@ controlWs.on('open', function() {
 
 });
 
+controlWs.on('message', function(data) {
+	data = JSON.parse(data);
+
+	if (data.type == 'jog') {
+		serialPort.write("j"+data.data.x + " " + data.data.y + " ");
+	}
+	if (data.type == 'absolutePosition') {
+		serialPort.write("g"+data.data.x + " " + data.data.y + " ");	
+	}
+});
+
 
 //
 // Stepper
@@ -72,12 +83,15 @@ serialPort.on("open", function () {
 serialPort.on('data', function(str) {
 	
 	var data = str.split(' ');
-	controlWs.send(JSON.stringify({
-		currentX: parseInt(data[0], 10),
-		currentY: parseInt(data[1], 10),
-		targetX: parseInt(data[2], 10),
-		targetY: parseInt(data[3], 10),
-		distanceX: parseInt(data[4], 10),
-		distanceY: parseInt(data[5], 10)
+	controlWs.send(JSON.stringify({ 
+		type: 'position', 
+		data: {
+			currentX: parseInt(data[0], 10),
+			currentY: parseInt(data[1], 10),
+			targetX: parseInt(data[2], 10),
+			targetY: parseInt(data[3], 10),
+			distanceX: parseInt(data[4], 10),
+			distanceY: parseInt(data[5], 10) 
+		}
 	}));
 });

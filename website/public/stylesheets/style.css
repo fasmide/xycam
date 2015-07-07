@@ -6,3 +6,20 @@ body {
 a {
   color: #00B7FF;
 }
+
+table.position { 
+	font-size:140%; color: gray;
+}
+table td {
+	width: 100px;
+}
+#joystickcontainer {
+	width: 200px;
+	height: 200px;
+	overflow: hidden;
+	padding: 0;
+	margin: 0;
+	background-color: gray;
+	-webkit-user-select: none;
+}
+
