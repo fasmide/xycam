@@ -1,20 +1,20 @@
 #include <AccelStepper.h>
 
 //(type, step pin, direction pin)
-AccelStepper stepperX(AccelStepper::DRIVER, 2, 5);
+AccelStepper stepperX(AccelStepper::DRIVER, 4, 5);
 AccelStepper stepperY(AccelStepper::DRIVER, 3, 6);
 
 unsigned long nextUpdate = 0;
 
 void setup()
 {
-    Serial.begin(115200);
-    Serial.setTimeout(10);
-    stepperX.setMaxSpeed(750);
-    stepperX.setAcceleration(100);
+    Serial.begin(57600);
+    Serial.setTimeout(25);
+    stepperX.setMaxSpeed(1000);
+    stepperX.setAcceleration(300);
     
-    stepperY.setMaxSpeed(750);
-    stepperY.setAcceleration(100);
+    stepperY.setMaxSpeed(1000);
+    stepperY.setAcceleration(300);
     
 }
 

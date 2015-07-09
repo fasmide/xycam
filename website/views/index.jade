@@ -35,8 +35,8 @@ block content
 		server.onopen = function() {
 			console.log("Has connection");
 			setInterval(function() {
-				var x = parseInt(joystick.deltaX(), 10);
-				var y = parseInt(joystick.deltaY(), 10);
+				var x = parseInt(joystick.deltaX()*2, 10);
+				var y = parseInt(joystick.deltaY()*5, 10);
 				if(x === 0 && y === 0) {
 					if(debounceZeros > 5) {
 						return;

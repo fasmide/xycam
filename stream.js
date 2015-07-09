@@ -6,8 +6,8 @@ var SerialPort = require("serialport")
 
 
 
-var serialPort = new SerialPort.SerialPort("/dev/ttyUSB0", {
-  baudrate: 115200,
+var serialPort = new SerialPort.SerialPort("/dev/ttyUSB1", {
+  baudrate: 57600,
   parser: SerialPort.parsers.readline("\n")
 });
 
