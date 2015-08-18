@@ -6,7 +6,7 @@ var SerialPort = require("serialport")
 
 
 
-var serialPort = new SerialPort.SerialPort("/dev/ttyUSB1", {
+var serialPort = new SerialPort.SerialPort("/dev/rfcomm0", {
   baudrate: 57600,
   parser: SerialPort.parsers.readline("\n")
 });
@@ -30,7 +30,7 @@ ws.on('open', function() {
 		imgs++;
 	});
 
-	//request("http://10.0.0.1:60152/liveview.JPG?%211234%21http%2dget%3a%2a%3aimage%2fjpeg%3a%2a%21%21%21%21%21").pipe(consumer);
+	request("http://10.0.0.1:60152/liveview.JPG?%211234%21http%2dget%3a%2a%3aimage%2fjpeg%3a%2a%21%21%21%21%21").pipe(consumer);
 
 });
 
