@@ -1,4 +1,5 @@
 #include <AccelStepper.h>
+#include <TimerOne.h>
 
 //(type, step pin, direction pin)
 AccelStepper stepperX(AccelStepper::DRIVER, 5, 4);
@@ -8,70 +9,70 @@ unsigned long nextUpdate = 0;
 
 int timer1_counter;
 
+boolean enabled = false;
 boolean homeing = false;
 
 void setup()
 {
   Serial.begin(57600);
   Serial.setTimeout(25);
-  stepperX.setMaxSpeed(1000);
-  stepperX.setAcceleration(300);
+  stepperX.setMaxSpeed(2000);
+  stepperX.setAcceleration(5000);
 
 
-  stepperY.setMaxSpeed(750);
-  stepperY.setAcceleration(100);
+  stepperY.setMaxSpeed(2000);
+  stepperY.setAcceleration(5000);
 
 
-  // initialize timer1 
-  noInterrupts();           // disable all interrupts
-  TCCR1A = 0;
-  TCCR1B = 0;
-
-  // Set timer1_counter to the correct value for our interrupt interval
-  timer1_counter = 64886;   // preload timer 65536-16MHz/8/100Hz
-  //timer1_counter = 64286;   // preload timer 65536-16MHz/256/50Hz
-  //timer1_counter = 34286;   // preload timer 65536-16MHz/256/2Hz
-
-  TCNT1 = timer1_counter;   // preload timer
-  //TCCR1B |= (1 << CS11) | (1 << CS10);    // 64 prescaler 
-  TCCR1B |= (1 << CS11);    // 8 prescaler
-  TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
-  interrupts();             // enable all interrupts
+  Timer1.initialize(50); // microseconds
+  Timer1.attachInterrupt( timerIsr ); // attach the service routine here
   pinMode(2, INPUT_PULLUP);
-  digitalWrite(6, HIGH);
-  digitalWrite(9, HIGH);
+  attachInterrupt(0, setY, FALLING);
+  pinMode(6, OUTPUT);
+  pinMode(9, OUTPUT);
+
+
 }
-ISR(TIMER1_OVF_vect)        // interrupt service routine 
+void timerIsr()
 {
-  TCNT1 = timer1_counter;   // preload timer
-  stepperX.run();
   stepperY.run();
+  stepperX.run();
+}
+void setY() {
+  stepperX.stop();
+  stepperX.setCurrentPosition(0);
+  homeing = false;
 }
 void loop()
 {
 
 
-  if (!homeing) {
-    handleInput();
-  }
+  handleInput();
+  
   update();
 
   if (homeing) {
+    enable();
     if (digitalRead(2)) {
-      
-      stepperX.move(-10);
-    
-    } else {
-      stepperX.stop();
-      stepperX.setCurrentPosition(0);
-      homeing = false;
-      
+
+      stepperX.move(-10000);
+
     }
   }
 
 }
 
+void enable() {
+  enabled = true;
+  digitalWrite(6, HIGH);
+  digitalWrite(9, HIGH);
+}
+void disable() {
+  enabled = false;
+  digitalWrite(6, LOW);
+  digitalWrite(9, LOW);
 
+}
 void update() {
 
   //this should be every second or so
@@ -91,7 +92,9 @@ void update() {
     Serial.print(stepperY.distanceToGo());
     Serial.print(" ");
     Serial.print((homeing ? 'y' : 'n'));
-    Serial.print("\r\n");
+    Serial.print(" ");
+    Serial.print((enabled ? 'y' : 'n'));
+    Serial.print("\r");
 
     nextUpdate = millis() + 250;
   }
@@ -109,7 +112,7 @@ void handleInput() {
       stepperY.move(jogY);
     }
 
-    if (command == 'g') { 
+    if (command == 'g') {
       long absoluteX = Serial.parseInt();
       long absoluteY = Serial.parseInt();
       stepperX.moveTo(absoluteX);
@@ -123,7 +126,7 @@ void handleInput() {
       if (motor == 'Y') {
 
         stepperY.setMaxSpeed(speed);
-      }          
+      }
       if (motor == 'X') {
 
         stepperX.setMaxSpeed(speed);
@@ -148,7 +151,11 @@ void handleInput() {
     if (command == 'h') {
       homeing = true;
     }
-
+    if (command == 'E') {
+      enable();
+    }
+    if (command == 'e') {
+      disable();
+    }
   }
 }
-
