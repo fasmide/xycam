@@ -7,7 +7,6 @@ AccelStepper stepperY(AccelStepper::DRIVER, 8, 7);
 
 unsigned long nextUpdate = 0;
 
-int timer1_counter;
 
 boolean enabled = false;
 boolean homeing = false;
@@ -16,18 +15,18 @@ void setup()
 {
   Serial.begin(57600);
   Serial.setTimeout(25);
-  stepperX.setMaxSpeed(2000);
-  stepperX.setAcceleration(5000);
+  stepperX.setMaxSpeed(3000);
+  stepperX.setAcceleration(4000);
 
 
-  stepperY.setMaxSpeed(2000);
-  stepperY.setAcceleration(5000);
+  stepperY.setMaxSpeed(1000);
+  stepperY.setAcceleration(4000);
 
 
-  Timer1.initialize(50); // microseconds
-  Timer1.attachInterrupt( timerIsr ); // attach the service routine here
-  pinMode(2, INPUT_PULLUP);
-  attachInterrupt(0, setY, FALLING);
+  Timer1.initialize(86);              // Microseconds
+  Timer1.attachInterrupt( timerIsr );  // Attach stepper update function
+  pinMode(2, INPUT_PULLUP);            // Enable pullup resistors for the homing switch
+  attachInterrupt(0, homeXIsr, FALLING);   // Attach homing function
   pinMode(6, OUTPUT);
   pinMode(9, OUTPUT);
 
@@ -38,9 +37,9 @@ void timerIsr()
   stepperY.run();
   stepperX.run();
 }
-void setY() {
-  stepperX.stop();
+void homeXIsr() {
   stepperX.setCurrentPosition(0);
+  stepperX.move(0);
   homeing = false;
 }
 void loop()
@@ -53,13 +52,13 @@ void loop()
 
   if (homeing) {
     enable();
-    if (digitalRead(2)) {
-
-      stepperX.move(-10000);
-
+    if (!digitalRead(2)) { // Allready at home position
+      stepperX.move(1000); // Move away from home
+      }
+    if (digitalRead(2)) {  // If not homed
+      stepperX.move(-1000);// Move towards home
     }
   }
-
 }
 
 void enable() {
@@ -82,21 +81,22 @@ void update() {
     Serial.print(stepperX.currentPosition());
     Serial.print(" ");
     Serial.print(stepperY.currentPosition());
-    Serial.print(" ");
-    Serial.print(stepperX.targetPosition());
-    Serial.print(" ");
-    Serial.print(stepperY.targetPosition());
-    Serial.print(" ");
-    Serial.print(stepperX.distanceToGo());
-    Serial.print(" ");
-    Serial.print(stepperY.distanceToGo());
+//    Serial.print(" ");
+//    Serial.print(stepperX.targetPosition());
+//    Serial.print(" ");
+//    Serial.print(stepperY.targetPosition());
+//    Serial.print(" ");
+//    Serial.print(stepperX.distanceToGo());
+//    Serial.print(" ");
+//    Serial.print(stepperY.distanceToGo());
     Serial.print(" ");
     Serial.print((homeing ? 'y' : 'n'));
     Serial.print(" ");
     Serial.print((enabled ? 'y' : 'n'));
+    Serial.print(" ");
+    Serial.print(millis()-nextUpdate);
     Serial.print("\r");
-
-    nextUpdate = millis() + 250;
+    nextUpdate = millis() + 1000;
   }
 }
 void handleInput() {
